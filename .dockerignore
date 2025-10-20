@@ -1,0 +1,66 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github
+.gitlab-ci.yml
+
+# Documentation
+README.md
+LICENSE
+*.md
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+yarn.lock
+
+# Build artifacts
+dist
+build
+*.js
+*.js.map
+*.d.ts
+!src/**/*.ts
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.example
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+coverage
+.nyc_output
+test
+tests
+__tests__
+*.test.ts
+*.spec.ts
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Scripts
+*.sh
+*.bat
+
+# Misc
+.cache
+tmp
+temp
+logs
+*.log

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "frontapp": {
+      "command": "/home/ziad/Documents/FrontappMCP/lmstudio-frontapp-wrapper.sh",
+      "env": {
+        "FRONTAPP_API_TOKEN": ""
+      }
+    }
+  }
+}

@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  frontapp-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frontapp-mcp-server
+    environment:
+      - FRONTAPP_API_TOKEN=${FRONTAPP_API_TOKEN}
+      - NODE_ENV=production
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+    # Use stdio for MCP communication
+    command: node dist/index.js
+    networks:
+      - mcp-network
+    labels:
+      - "com.docker.compose.project=frontapp-mcp"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  mcp-network:
+    driver: bridge

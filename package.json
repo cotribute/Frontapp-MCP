@@ -1,0 +1,33 @@
+{
+  "name": "frontapp-mcp-server",
+  "version": "1.0.0",
+  "description": "Model Context Protocol server for Frontapp API integration",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "frontapp-mcp-server": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "frontapp",
+    "model-context-protocol",
+    "claude",
+    "api"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.7.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}
