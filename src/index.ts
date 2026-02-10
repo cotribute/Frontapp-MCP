@@ -3286,7 +3286,6 @@ if (!apiToken) {
 
 const mcpApiKey = process.env.MCP_API_KEY;
 
-const frontapp = new FrontappMCPServer(apiToken);
 const app = express();
 
 app.use(express.json());
@@ -3319,7 +3318,8 @@ app.all('/mcp', authMiddleware, async (req: Request, res: Response) => {
   const sessionId = req.headers['mcp-session-id'] as string | undefined;
 
   if (req.method === 'POST' && !sessionId) {
-    // New session — create a transport and connect it to the MCP server
+    // New session — create a new MCP server + transport pair (Server is 1:1 with transport)
+    const frontapp = new FrontappMCPServer(apiToken);
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: () => randomUUID(),
     });
