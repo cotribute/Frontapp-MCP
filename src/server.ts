@@ -12,35 +12,49 @@ import { createHandlers as createFrontappHandlers } from "./frontapp/handlers.js
 import { tools as pipedriveTools } from "./pipedrive/tools.js";
 import { createHandlers as createPipedriveHandlers } from "./pipedrive/handlers.js";
 
+export type ModuleScope = "all" | "frontapp" | "pipedrive";
+
 export class CotributeMCPServer {
   private server: Server;
-  private frontappAxios: AxiosInstance;
+  private frontappAxios: AxiosInstance | null;
   private pipedriveAxios: AxiosInstance | null;
   private handlers: Record<string, (args: any) => Promise<any>>;
+  private scope: ModuleScope;
 
   constructor(
     frontappToken: string,
     pipedriveToken?: string,
-    pipedriveDomain?: string
+    pipedriveDomain?: string,
+    scope: ModuleScope = "all"
   ) {
+    this.scope = scope;
     this.server = new Server(
       { name: "switchboard", version: "2.0.0" },
       { capabilities: { tools: {}, resources: {} } }
     );
 
-    this.frontappAxios = axios.create({
-      baseURL: "https://api2.frontapp.com",
-      headers: {
-        Authorization: `Bearer ${frontappToken}`,
-        "Content-Type": "application/json",
-      },
-    });
+    this.handlers = {};
+    this.frontappAxios = null;
+    this.pipedriveAxios = null;
 
-    // Merge handlers from Front.app
-    this.handlers = { ...createFrontappHandlers(this.frontappAxios) };
+    // Front.app module
+    if (scope === "all" || scope === "frontapp") {
+      this.frontappAxios = axios.create({
+        baseURL: "https://api2.frontapp.com",
+        headers: {
+          Authorization: `Bearer ${frontappToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      Object.assign(this.handlers, createFrontappHandlers(this.frontappAxios));
+    }
 
-    // Conditionally add Pipedrive if configured
-    if (pipedriveToken && pipedriveDomain) {
+    // Pipedrive module
+    if (
+      (scope === "all" || scope === "pipedrive") &&
+      pipedriveToken &&
+      pipedriveDomain
+    ) {
       this.pipedriveAxios = axios.create({
         baseURL: `https://${pipedriveDomain}.pipedrive.com/api/v1`,
         headers: {
@@ -52,8 +66,6 @@ export class CotributeMCPServer {
         this.handlers,
         createPipedriveHandlers(this.pipedriveAxios)
       );
-    } else {
-      this.pipedriveAxios = null;
     }
 
     this.setupHandlers();
@@ -72,9 +84,9 @@ export class CotributeMCPServer {
   }
 
   private setupHandlers(): void {
-    // Merge tool definitions
+    // Include tool definitions based on scope
     const allTools = [
-      ...frontappTools,
+      ...(this.frontappAxios ? frontappTools : []),
       ...(this.pipedriveAxios ? pipedriveTools : []),
     ];
 

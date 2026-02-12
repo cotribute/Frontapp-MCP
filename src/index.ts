@@ -4,7 +4,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import express, { Request, Response, NextFunction } from "express";
 import { randomUUID } from "crypto";
 
-import { CotributeMCPServer } from "./server.js";
+import { CotributeMCPServer, ModuleScope } from "./server.js";
 
 // Required env vars
 const frontappToken = process.env.FRONTAPP_API_TOKEN;
@@ -52,54 +52,65 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
 // Track transports by session ID for stateful connections
 const transports = new Map<string, StreamableHTTPServerTransport>();
 
-// MCP handler shared by both routes
-async function handleMcp(req: Request, res: Response) {
-  const sessionId = req.headers["mcp-session-id"] as string | undefined;
+// Creates an MCP handler scoped to specific modules
+function createMcpHandler(scope: ModuleScope) {
+  return async (req: Request, res: Response) => {
+    const sessionId = req.headers["mcp-session-id"] as string | undefined;
 
-  if (req.method === "POST" && !sessionId) {
-    // New session — create a new MCP server + transport pair (Server is 1:1 with transport)
-    const newSessionId = randomUUID();
-    const mcpServer = new CotributeMCPServer(
-      frontappToken,
-      pipedriveToken,
-      pipedriveDomain
-    );
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: () => newSessionId,
-    });
+    if (req.method === "POST" && !sessionId) {
+      // New session — create a new MCP server + transport pair (Server is 1:1 with transport)
+      const newSessionId = randomUUID();
+      const mcpServer = new CotributeMCPServer(
+        frontappToken,
+        pipedriveToken,
+        pipedriveDomain,
+        scope
+      );
+      const transport = new StreamableHTTPServerTransport({
+        sessionIdGenerator: () => newSessionId,
+      });
 
-    transport.onclose = () => {
-      transports.delete(newSessionId);
-    };
+      transport.onclose = () => {
+        transports.delete(newSessionId);
+      };
 
-    await mcpServer.getServer().connect(transport);
+      await mcpServer.getServer().connect(transport);
 
-    // Store BEFORE handleRequest — handleRequest may hold the connection open for SSE
-    // and not resolve, so we must register the session first.
-    transports.set(newSessionId, transport);
+      // Store BEFORE handleRequest — handleRequest may hold the connection open for SSE
+      // and not resolve, so we must register the session first.
+      transports.set(newSessionId, transport);
 
-    await transport.handleRequest(req, res, req.body);
-    return;
-  }
-
-  // Existing session — look up the transport
-  if (sessionId) {
-    const transport = transports.get(sessionId);
-    if (!transport) {
-      res.status(404).json({ error: "Session not found" });
+      await transport.handleRequest(req, res, req.body);
       return;
     }
-    await transport.handleRequest(req, res, req.body);
-    return;
-  }
 
-  res.status(400).json({ error: "Missing mcp-session-id header" });
+    // Existing session — look up the transport
+    if (sessionId) {
+      const transport = transports.get(sessionId);
+      if (!transport) {
+        res.status(404).json({ error: "Session not found" });
+        return;
+      }
+      await transport.handleRequest(req, res, req.body);
+      return;
+    }
+
+    res.status(400).json({ error: "Missing mcp-session-id header" });
+  };
 }
 
-// /mcp — auth via Authorization header (Claude Code)
-app.all("/mcp", authMiddleware, handleMcp);
-// /mcp/:token — auth via URL path (Claude Desktop / Cowork connectors)
-app.all("/mcp/:token", authMiddleware, handleMcp);
+// Scoped endpoints (must be registered before the wildcard /mcp/:token)
+app.all("/mcp/frontapp", authMiddleware, createMcpHandler("frontapp"));
+app.all("/mcp/frontapp/:token", authMiddleware, createMcpHandler("frontapp"));
+app.all("/mcp/pipedrive", authMiddleware, createMcpHandler("pipedrive"));
+app.all(
+  "/mcp/pipedrive/:token",
+  authMiddleware,
+  createMcpHandler("pipedrive")
+);
+// All tools (backwards compatible)
+app.all("/mcp", authMiddleware, createMcpHandler("all"));
+app.all("/mcp/:token", authMiddleware, createMcpHandler("all"));
 
 const port = parseInt(process.env.PORT || "3000", 10);
 app.listen(port, () => {
