@@ -99,12 +99,12 @@ function createMcpHandler(scope: ModuleScope) {
   };
 }
 
-// Scoped endpoints (must be registered before the wildcard /mcp/:token)
-app.all("/mcp/frontapp", authMiddleware, createMcpHandler("frontapp"));
-app.all("/mcp/frontapp/:token", authMiddleware, createMcpHandler("frontapp"));
-app.all("/mcp/pipedrive", authMiddleware, createMcpHandler("pipedrive"));
+// Scoped endpoints — path ends in /mcp per MCP spec canonical URI convention
+app.all("/frontapp/mcp", authMiddleware, createMcpHandler("frontapp"));
+app.all("/frontapp/mcp/:token", authMiddleware, createMcpHandler("frontapp"));
+app.all("/pipedrive/mcp", authMiddleware, createMcpHandler("pipedrive"));
 app.all(
-  "/mcp/pipedrive/:token",
+  "/pipedrive/mcp/:token",
   authMiddleware,
   createMcpHandler("pipedrive")
 );
