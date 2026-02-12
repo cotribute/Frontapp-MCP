@@ -18,6 +18,6 @@
     "declarationMap": false,
     "sourceMap": false
   },
-  "include": ["src/index.ts"],
-  "exclude": ["node_modules", "dist", "src/__tests__", "src/api", "src/clients", "src/config", "src/handlers", "src/middleware", "src/scripts", "src/utils"]
+  "include": ["src/index.ts", "src/server.ts", "src/frontapp/**/*.ts", "src/pipedrive/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

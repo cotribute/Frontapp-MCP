@@ -1,27 +1,11 @@
-# Build output
-dist/
-build/
-
-# Dependencies
-node_modules/
-
-# Test coverage
-coverage/
-
-# Logs
-logs/
-*.log
-
-# Environment variables
-.env
-.env.*
-
-# IDE files
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS files
-.DS_Store
-Thumbs.db
+src/__tests__
+src/api
+src/clients
+src/config
+src/examples
+src/handlers
+src/middleware
+src/models
+src/scripts
+src/utils
+src/frontapp-mcp-client.ts
