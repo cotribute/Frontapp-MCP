@@ -12,7 +12,58 @@ import { createHandlers as createFrontappHandlers } from "./frontapp/handlers.js
 import { tools as pipedriveTools } from "./pipedrive/tools.js";
 import { createHandlers as createPipedriveHandlers } from "./pipedrive/handlers.js";
 
-export type ModuleScope = "all" | "frontapp" | "pipedrive";
+export type ModuleScope =
+  | "all"
+  | "frontapp"
+  | "pipedrive"
+  | "frontapp-lite"
+  | "pipedrive-lite";
+
+// Read-only tool whitelists for lite scopes (saves ~80% of context tokens)
+const FRONTAPP_LITE_TOOLS = new Set([
+  "search_conversations",
+  "list_conversations",
+  "get_conversation",
+  "list_conversation_messages",
+  "get_message",
+  "list_contacts",
+  "get_contact",
+  "list_contact_conversations",
+  "list_teammates",
+  "list_tags",
+  "list_inboxes",
+  "list_conversation_comments",
+  "get_analytics",
+  "list_accounts",
+  "get_account",
+]);
+
+const PIPEDRIVE_LITE_TOOLS = new Set([
+  "list_deals",
+  "get_deal",
+  "search_deals",
+  "get_deal_activities",
+  "get_deal_products",
+  "list_persons",
+  "get_person",
+  "search_persons",
+  "get_person_deals",
+  "list_organizations",
+  "get_organization",
+  "search_organizations",
+  "get_organization_deals",
+  "get_organization_persons",
+  "list_activities",
+  "list_notes",
+  "get_note",
+  "list_pipelines",
+  "list_stages",
+  "search_leads",
+  "get_lead",
+  "list_deal_fields",
+  "list_person_fields",
+  "list_organization_fields",
+]);
 
 export class CotributeMCPServer {
   private server: Server;
@@ -37,8 +88,13 @@ export class CotributeMCPServer {
     this.frontappAxios = null;
     this.pipedriveAxios = null;
 
+    const includeFrontapp =
+      scope === "all" || scope === "frontapp" || scope === "frontapp-lite";
+    const includePipedrive =
+      scope === "all" || scope === "pipedrive" || scope === "pipedrive-lite";
+
     // Front.app module
-    if (scope === "all" || scope === "frontapp") {
+    if (includeFrontapp) {
       this.frontappAxios = axios.create({
         baseURL: "https://api2.frontapp.com",
         headers: {
@@ -50,11 +106,7 @@ export class CotributeMCPServer {
     }
 
     // Pipedrive module
-    if (
-      (scope === "all" || scope === "pipedrive") &&
-      pipedriveToken &&
-      pipedriveDomain
-    ) {
+    if (includePipedrive && pipedriveToken && pipedriveDomain) {
       this.pipedriveAxios = axios.create({
         baseURL: `https://${pipedriveDomain}.pipedrive.com/api/v1`,
         headers: {
@@ -84,14 +136,25 @@ export class CotributeMCPServer {
   }
 
   private setupHandlers(): void {
-    // Include tool definitions based on scope
+    // Include tool definitions based on scope, with lite filtering
+    const liteFilter =
+      this.scope === "frontapp-lite"
+        ? FRONTAPP_LITE_TOOLS
+        : this.scope === "pipedrive-lite"
+          ? PIPEDRIVE_LITE_TOOLS
+          : null;
+
     const allTools = [
       ...(this.frontappAxios ? frontappTools : []),
       ...(this.pipedriveAxios ? pipedriveTools : []),
     ];
 
+    const exposedTools = liteFilter
+      ? allTools.filter((t) => liteFilter.has(t.name))
+      : allTools;
+
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
-      tools: allTools,
+      tools: exposedTools,
     }));
 
     // Front.app resources

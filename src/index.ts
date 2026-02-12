@@ -99,7 +99,24 @@ function createMcpHandler(scope: ModuleScope) {
   };
 }
 
-// Scoped endpoints — path ends in /mcp per MCP spec canonical URI convention
+// Lite endpoints — read-only tools for context-constrained clients (Cowork)
+app.all("/frontapp-lite/mcp", authMiddleware, createMcpHandler("frontapp-lite"));
+app.all(
+  "/frontapp-lite/mcp/:token",
+  authMiddleware,
+  createMcpHandler("frontapp-lite")
+);
+app.all(
+  "/pipedrive-lite/mcp",
+  authMiddleware,
+  createMcpHandler("pipedrive-lite")
+);
+app.all(
+  "/pipedrive-lite/mcp/:token",
+  authMiddleware,
+  createMcpHandler("pipedrive-lite")
+);
+// Full scoped endpoints
 app.all("/frontapp/mcp", authMiddleware, createMcpHandler("frontapp"));
 app.all("/frontapp/mcp/:token", authMiddleware, createMcpHandler("frontapp"));
 app.all("/pipedrive/mcp", authMiddleware, createMcpHandler("pipedrive"));
