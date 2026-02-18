@@ -1,6 +1,6 @@
 # Switchboard
 
-Cotribute's MCP server — exposes Front.app and Pipedrive tools to Claude (Code + Cowork).
+Cotribute's MCP server — exposes Front.app, Pipedrive, and Instantly tools to Claude (Code + Cowork).
 
 ## Development Commands
 
@@ -25,11 +25,14 @@ src/
   pipedrive/
     tools.ts            # Pipedrive tool definitions (55 tools)
     handlers.ts         # Pipedrive handlers (axios → {domain}.pipedrive.com/api/v1)
+  instantly/
+    tools.ts            # Instantly tool definitions (25 tools)
+    handlers.ts         # Instantly handlers (axios → api.instantly.ai/api/v2)
 ```
 
 **How modules compose:** Each module exports a `tools` array and a `createHandlers(axiosInstance)` function. `server.ts` merges them into a single MCP Server with one `ListToolsRequestSchema` and one `CallToolRequestSchema` handler that dispatches via a merged handler map.
 
-Pipedrive tools are only registered when `PIPEDRIVE_API_TOKEN` and `PIPEDRIVE_DOMAIN` env vars are set.
+Pipedrive tools are only registered when `PIPEDRIVE_API_TOKEN` and `PIPEDRIVE_DOMAIN` env vars are set. Instantly tools are only registered when `INSTANTLY_API_TOKEN` is set.
 
 ## Adding a New Tool
 
@@ -63,6 +66,7 @@ git push heroku master    # Deploy to Heroku
 | `MCP_API_KEY` | No | Bearer token protecting the /mcp endpoint |
 | `PIPEDRIVE_API_TOKEN` | No | Pipedrive API token |
 | `PIPEDRIVE_DOMAIN` | No* | Pipedrive company subdomain (required if token is set) |
+| `INSTANTLY_API_TOKEN` | No | Instantly.ai API v2 Bearer token |
 
 ## Auth
 

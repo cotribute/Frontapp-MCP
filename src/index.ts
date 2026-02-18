@@ -17,6 +17,9 @@ if (!frontappToken) {
 const pipedriveToken = process.env.PIPEDRIVE_API_TOKEN;
 const pipedriveDomain = process.env.PIPEDRIVE_DOMAIN;
 
+// Optional Instantly env vars
+const instantlyToken = process.env.INSTANTLY_API_TOKEN;
+
 if (pipedriveToken && !pipedriveDomain) {
   console.error(
     "Error: PIPEDRIVE_DOMAIN is required when PIPEDRIVE_API_TOKEN is set"
@@ -64,6 +67,7 @@ function createMcpHandler(scope: ModuleScope) {
         frontappToken,
         pipedriveToken,
         pipedriveDomain,
+        instantlyToken,
         scope
       );
       const transport = new StreamableHTTPServerTransport({
@@ -100,7 +104,11 @@ function createMcpHandler(scope: ModuleScope) {
 }
 
 // Lite endpoints — read-only tools for context-constrained clients (Cowork)
-app.all("/frontapp-lite/mcp", authMiddleware, createMcpHandler("frontapp-lite"));
+app.all(
+  "/frontapp-lite/mcp",
+  authMiddleware,
+  createMcpHandler("frontapp-lite")
+);
 app.all(
   "/frontapp-lite/mcp/:token",
   authMiddleware,
@@ -116,15 +124,23 @@ app.all(
   authMiddleware,
   createMcpHandler("pipedrive-lite")
 );
+app.all(
+  "/instantly-lite/mcp",
+  authMiddleware,
+  createMcpHandler("instantly-lite")
+);
+app.all(
+  "/instantly-lite/mcp/:token",
+  authMiddleware,
+  createMcpHandler("instantly-lite")
+);
 // Full scoped endpoints
 app.all("/frontapp/mcp", authMiddleware, createMcpHandler("frontapp"));
 app.all("/frontapp/mcp/:token", authMiddleware, createMcpHandler("frontapp"));
 app.all("/pipedrive/mcp", authMiddleware, createMcpHandler("pipedrive"));
-app.all(
-  "/pipedrive/mcp/:token",
-  authMiddleware,
-  createMcpHandler("pipedrive")
-);
+app.all("/pipedrive/mcp/:token", authMiddleware, createMcpHandler("pipedrive"));
+app.all("/instantly/mcp", authMiddleware, createMcpHandler("instantly"));
+app.all("/instantly/mcp/:token", authMiddleware, createMcpHandler("instantly"));
 // All tools (backwards compatible)
 app.all("/mcp", authMiddleware, createMcpHandler("all"));
 app.all("/mcp/:token", authMiddleware, createMcpHandler("all"));
@@ -133,6 +149,7 @@ const port = parseInt(process.env.PORT || "3000", 10);
 app.listen(port, () => {
   const services = ["Front.app"];
   if (pipedriveToken) services.push("Pipedrive");
+  if (instantlyToken) services.push("Instantly");
   console.log(
     `Switchboard MCP server listening on port ${port} (${services.join(" + ")})`
   );

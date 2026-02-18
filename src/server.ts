@@ -11,13 +11,17 @@ import { tools as frontappTools } from "./frontapp/tools.js";
 import { createHandlers as createFrontappHandlers } from "./frontapp/handlers.js";
 import { tools as pipedriveTools } from "./pipedrive/tools.js";
 import { createHandlers as createPipedriveHandlers } from "./pipedrive/handlers.js";
+import { tools as instantlyTools } from "./instantly/tools.js";
+import { createHandlers as createInstantlyHandlers } from "./instantly/handlers.js";
 
 export type ModuleScope =
   | "all"
   | "frontapp"
   | "pipedrive"
+  | "instantly"
   | "frontapp-lite"
-  | "pipedrive-lite";
+  | "pipedrive-lite"
+  | "instantly-lite";
 
 // Read-only tool whitelists for lite scopes (saves ~80% of context tokens)
 const FRONTAPP_LITE_TOOLS = new Set([
@@ -65,10 +69,30 @@ const PIPEDRIVE_LITE_TOOLS = new Set([
   "list_organization_fields",
 ]);
 
+const INSTANTLY_LITE_TOOLS = new Set([
+  "get_instantly_campaign_analytics",
+  "get_instantly_campaign_analytics_daily",
+  "get_instantly_campaign_analytics_overview",
+  "get_instantly_campaign_analytics_steps",
+  "get_instantly_account_analytics_daily",
+  "get_instantly_warmup_analytics",
+  "list_instantly_campaigns",
+  "get_instantly_campaign",
+  "search_instantly_campaigns_by_lead",
+  "list_instantly_leads",
+  "get_instantly_lead",
+  "list_instantly_lead_lists",
+  "get_instantly_lead_list_verification_stats",
+  "list_instantly_emails",
+  "list_instantly_accounts",
+  "get_instantly_account",
+]);
+
 export class CotributeMCPServer {
   private server: Server;
   private frontappAxios: AxiosInstance | null;
   private pipedriveAxios: AxiosInstance | null;
+  private instantlyAxios: AxiosInstance | null;
   private handlers: Record<string, (args: any) => Promise<any>>;
   private scope: ModuleScope;
 
@@ -76,6 +100,7 @@ export class CotributeMCPServer {
     frontappToken: string,
     pipedriveToken?: string,
     pipedriveDomain?: string,
+    instantlyToken?: string,
     scope: ModuleScope = "all"
   ) {
     this.scope = scope;
@@ -87,11 +112,14 @@ export class CotributeMCPServer {
     this.handlers = {};
     this.frontappAxios = null;
     this.pipedriveAxios = null;
+    this.instantlyAxios = null;
 
     const includeFrontapp =
       scope === "all" || scope === "frontapp" || scope === "frontapp-lite";
     const includePipedrive =
       scope === "all" || scope === "pipedrive" || scope === "pipedrive-lite";
+    const includeInstantly =
+      scope === "all" || scope === "instantly" || scope === "instantly-lite";
 
     // Front.app module
     if (includeFrontapp) {
@@ -120,6 +148,21 @@ export class CotributeMCPServer {
       );
     }
 
+    // Instantly module
+    if (includeInstantly && instantlyToken) {
+      this.instantlyAxios = axios.create({
+        baseURL: "https://api.instantly.ai/api/v2",
+        headers: {
+          Authorization: `Bearer ${instantlyToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+      Object.assign(
+        this.handlers,
+        createInstantlyHandlers(this.instantlyAxios)
+      );
+    }
+
     this.setupHandlers();
     this.setupErrorHandling();
   }
@@ -142,11 +185,14 @@ export class CotributeMCPServer {
         ? FRONTAPP_LITE_TOOLS
         : this.scope === "pipedrive-lite"
           ? PIPEDRIVE_LITE_TOOLS
-          : null;
+          : this.scope === "instantly-lite"
+            ? INSTANTLY_LITE_TOOLS
+            : null;
 
     const allTools = [
       ...(this.frontappAxios ? frontappTools : []),
       ...(this.pipedriveAxios ? pipedriveTools : []),
+      ...(this.instantlyAxios ? instantlyTools : []),
     ];
 
     const exposedTools = liteFilter
