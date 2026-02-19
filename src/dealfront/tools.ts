@@ -46,14 +46,13 @@ export const tools = [
           description:
             "End date for filtering leads (YYYY-MM-DD). Defaults to today.",
         },
-        "page[number]": {
+        page_number: {
           type: "number",
           description: "Page number for pagination. Default is 1.",
         },
-        "page[size]": {
+        page_size: {
           type: "number",
-          description:
-            "Number of results per page (max 100). Default is 10.",
+          description: "Number of results per page (max 100). Default is 10.",
         },
       },
       required: ["account_id"],
@@ -95,11 +94,11 @@ export const tools = [
           type: "string",
           description: "The ID of the lead.",
         },
-        "page[number]": {
+        page_number: {
           type: "number",
           description: "Page number for pagination.",
         },
-        "page[size]": {
+        page_size: {
           type: "number",
           description: "Number of results per page (max 100).",
         },
@@ -126,11 +125,11 @@ export const tools = [
           type: "string",
           description: "End date for filtering visits (YYYY-MM-DD).",
         },
-        "page[number]": {
+        page_number: {
           type: "number",
           description: "Page number for pagination.",
         },
-        "page[size]": {
+        page_size: {
           type: "number",
           description: "Number of results per page (max 100).",
         },
@@ -178,11 +177,11 @@ export const tools = [
           type: "string",
           description: "End date for filtering (YYYY-MM-DD).",
         },
-        "page[number]": {
+        page_number: {
           type: "number",
           description: "Page number for pagination.",
         },
-        "page[size]": {
+        page_size: {
           type: "number",
           description: "Number of results per page (max 100).",
         },

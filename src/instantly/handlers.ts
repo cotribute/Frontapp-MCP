@@ -186,7 +186,9 @@ export function createHandlers(
 
     // ==================== Lead Labels ====================
     instantly_list_lead_labels: async (args) => {
-      const response = await axiosInstance.get("/lead-labels", { params: args });
+      const response = await axiosInstance.get("/lead-labels", {
+        params: args,
+      });
       return response.data;
     },
   };

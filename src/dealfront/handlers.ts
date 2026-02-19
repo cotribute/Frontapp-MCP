@@ -1,5 +1,14 @@
 import { AxiosInstance } from "axios";
 
+// Remap page_number/page_size to the bracket syntax the Leadfeeder API expects
+function toPageParams(params: Record<string, any>): Record<string, any> {
+  const { page_number, page_size, ...rest } = params;
+  const out: Record<string, any> = { ...rest };
+  if (page_number !== undefined) out["page[number]"] = page_number;
+  if (page_size !== undefined) out["page[size]"] = page_size;
+  return out;
+}
+
 /**
  * Creates Dealfront Leadfeeder API handlers.
  * Auth: `Authorization: Token token=<api_token>`
@@ -28,13 +37,13 @@ export function createHandlers(
       account_id: string;
       start_date?: string;
       end_date?: string;
-      "page[number]"?: number;
-      "page[size]"?: number;
+      page_number?: number;
+      page_size?: number;
     }) => {
-      const { account_id, ...params } = args;
+      const { account_id, ...rest } = args;
       const response = await leadfeederAxios.get(
         `/accounts/${account_id}/leads`,
-        { params }
+        { params: toPageParams(rest) }
       );
       return response.data;
     },
@@ -52,13 +61,13 @@ export function createHandlers(
     dealfront_list_lead_visits: async (args: {
       account_id: string;
       lead_id: string;
-      "page[number]"?: number;
-      "page[size]"?: number;
+      page_number?: number;
+      page_size?: number;
     }) => {
-      const { account_id, lead_id, ...params } = args;
+      const { account_id, lead_id, ...rest } = args;
       const response = await leadfeederAxios.get(
         `/accounts/${account_id}/leads/${lead_id}/visits`,
-        { params }
+        { params: toPageParams(rest) }
       );
       return response.data;
     },
@@ -66,13 +75,13 @@ export function createHandlers(
       account_id: string;
       start_date?: string;
       end_date?: string;
-      "page[number]"?: number;
-      "page[size]"?: number;
+      page_number?: number;
+      page_size?: number;
     }) => {
-      const { account_id, ...params } = args;
+      const { account_id, ...rest } = args;
       const response = await leadfeederAxios.get(
         `/accounts/${account_id}/visits`,
-        { params }
+        { params: toPageParams(rest) }
       );
       return response.data;
     },
@@ -89,13 +98,13 @@ export function createHandlers(
       feed_id: string;
       start_date?: string;
       end_date?: string;
-      "page[number]"?: number;
-      "page[size]"?: number;
+      page_number?: number;
+      page_size?: number;
     }) => {
-      const { account_id, feed_id, ...params } = args;
+      const { account_id, feed_id, ...rest } = args;
       const response = await leadfeederAxios.get(
         `/accounts/${account_id}/custom-feeds/${feed_id}/leads`,
-        { params }
+        { params: toPageParams(rest) }
       );
       return response.data;
     },

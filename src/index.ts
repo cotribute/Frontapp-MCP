@@ -201,11 +201,7 @@ app.all(
   createMcpHandler("instantly-lite")
 );
 app.all("/instantly/mcp", authMiddleware, createMcpHandler("instantly"));
-app.all(
-  "/instantly/mcp/:token",
-  authMiddleware,
-  createMcpHandler("instantly")
-);
+app.all("/instantly/mcp/:token", authMiddleware, createMcpHandler("instantly"));
 // Full scoped endpoints
 app.all("/frontapp/mcp", authMiddleware, createMcpHandler("frontapp"));
 app.all("/frontapp/mcp/:token", authMiddleware, createMcpHandler("frontapp"));

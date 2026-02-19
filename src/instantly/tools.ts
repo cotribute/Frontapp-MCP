@@ -386,8 +386,7 @@ export const tools = [
   // ==================== Sending Accounts ====================
   {
     name: "instantly_list_accounts",
-    description:
-      "List all sending email accounts configured in Instantly.ai.",
+    description: "List all sending email accounts configured in Instantly.ai.",
     inputSchema: {
       type: "object",
       properties: {
@@ -573,8 +572,7 @@ export const tools = [
   },
   {
     name: "instantly_add_blocklist_entry",
-    description:
-      "Add an email or domain to the blocklist to prevent outreach.",
+    description: "Add an email or domain to the blocklist to prevent outreach.",
     inputSchema: {
       type: "object",
       properties: {
